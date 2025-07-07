@@ -1,0 +1,1155 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Bird</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 700px;
+            background: linear-gradient(135deg, #555, #333);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            border: 8px solid #444;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #87CEEB;
+            border-radius: 10px;
+        }
+
+        /* شاشة البداية */
+        #start-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10;
+        }
+
+        .game-title {
+            font-size: 3.5rem;
+            color: white;
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 2rem;
+        }
+
+        .menu-button {
+            width: 60%;
+            padding: 15px 0;
+            margin: 15px 0;
+            font-size: 1.5rem;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .menu-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        #start-button {
+            background-color: #4CAF50;
+        }
+
+        #store-button {
+            background-color: #FFC107;
+        }
+
+        #about-button {
+            background-color: #00b4db;
+        }
+
+        /* شاشة نهاية اللعبة */
+        #game-over {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            z-index: 10;
+        }
+
+        .game-over-button {
+            width: 60%;
+            padding: 15px 0;
+            margin: 15px 0;
+            font-size: 1.5rem;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        #restart-button {
+            background-color: #4CAF50;
+        }
+
+        #menu-button {
+            background-color: #F44336;
+        }
+
+        /* شاشة المتجر */
+        #store-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            z-index: 20;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .coins-display {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            background-color: #FFD700;
+            color: #8B6914;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .close-store {
+            background-color: #F44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        .character-card {
+            background-color: #333;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .character-card:active {
+            transform: scale(0.98);
+        }
+
+        .character-image {
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-bottom: 10px;
+        }
+
+        .character-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .character-price {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .buy-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* عناصر اللعبة */
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: url('https://raw.githubusercontent.com/sourabhv/FlapPyBird/master/assets/sprites/redbird-midflap.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 5;
+        }
+
+        .pipe {
+            position: absolute;
+            width: 80px;
+            background: linear-gradient(to right, #4CAF50, #388E3C);
+            border: 4px solid #2E7D32;
+            box-sizing: border-box;
+        }
+
+        .pipe-top {
+            border-bottom: none;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            box-shadow: inset 0 -10px 10px -10px rgba(0,0,0,0.3);
+        }
+
+        .pipe-bottom {
+            border-top: none;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            box-shadow: inset 0 10px 10px -10px rgba(0,0,0,0.3);
+        }
+
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            background-color: #DEB887;
+            z-index: 1;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+
+        .coin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="%23FFD700" stroke="%23D4AF37" stroke-width="1"/><circle cx="10" cy="10" r="5" fill="%23FFF176" stroke="%23D4AF37" stroke-width="0.5"/></svg>');
+            background-size: contain;
+            z-index: 4;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        #coins-count {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+            display: flex;
+            align-items: center;
+        }
+
+        /* شاشة حول اللعبة */
+        .about-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            z-index: 100;
+        }
+
+        .about-header {
+            background: linear-gradient(90deg, #00b4db, #0083b0);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .about-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .about-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .about-section {
+            margin-bottom: 25px;
+        }
+
+        .about-section h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #00b4db;
+            display: flex;
+            align-items: center;
+        }
+
+        .about-section h2 i {
+            margin-left: 10px;
+        }
+
+        .about-section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .about-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-btn {
+            background: linear-gradient(90deg, #00b4db, #0083b0);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99;
+            display: none;
+        }
+
+        /* شريط التمرير */
+        .about-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .about-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .about-content::-webkit-scrollbar-thumb {
+            background: #00b4db;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .game-wrapper {
+                height: 100vh;
+                border-radius: 0;
+                padding: 0;
+            }
+
+            #game-container {
+                border-radius: 0;
+            }
+
+            .game-title {
+                font-size: 2.5rem;
+            }
+
+            .menu-button, .game-over-button {
+                width: 80%;
+                font-size: 1.2rem;
+            }
+
+            .about-container {
+                width: 95%;
+                max-height: 85vh;
+            }
+
+            .about-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+.player-counter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 1rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-counter i {
+    color: #4CAF50;
+}
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <div class="game-wrapper">
+        <div id="game-container">
+            <!-- شاشة البداية -->
+            <div id="start-screen">
+                <div class="game-title">Flappy Bird</div>
+                <button id="start-button" class="menu-button">ابدأ اللعبة</button>
+                <button id="store-button" class="menu-button">المتجر</button>
+                <button id="about-button" class="menu-button">حول اللعبة</button>
+            <div class="player-counter">
+        <i class="fas fa-users"></i>
+        <span id="total-players">0</span> لاعب حول العالم
+    </div>
+</div>
+
+            <!-- شاشة نهاية اللعبة -->
+            <div id="game-over">
+                <h1>انتهت اللعبة</h1>
+                <div id="final-score">النقاط: 0</div>
+                <button id="restart-button" class="game-over-button">العب مجدداً</button>
+                <button id="menu-button" class="game-over-button">العودة للقائمة</button>
+            </div>
+
+            <!-- شاشة المتجر -->
+            <div id="store-screen">
+                <div class="store-header">
+                    <div class="coins-display">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='%23FFD700' stroke='%23D4AF37' stroke-width='1'/><circle cx='10' cy='10' r='5' fill='%23FFF176' stroke='%23D4AF37' stroke-width='0.5'/></svg>" alt="Coins">
+                        <span id="store-coins">0</span>
+                    </div>
+                    <button class="close-store">&times;</button>
+                </div>
+                
+                <div class="characters-grid">
+                    <!-- سيتم ملؤها بالشخصيات عبر الجافاسكربت -->
+                </div>
+            </div>
+
+            <!-- عناصر اللعبة -->
+            <div id="bird"></div>
+            <div id="score">0</div>
+            <div id="coins-count">
+                <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='%23FFD700' stroke='%23D4AF37' stroke-width='1'/><circle cx='10' cy='10' r='5' fill='%23FFF176' stroke='%23D4AF37' stroke-width='0.5'/></svg>" alt="Coins">
+                <span id="coins-value">0</span>
+            </div>
+            <div id="ground"></div>
+        </div>
+    </div>
+
+   <!-- شاشة حول اللعبة -->
+<div class="overlay" id="overlay"></div>
+<div class="about-container" id="about-screen">
+    <div class="about-header">
+        <h1><i class="fas fa-info-circle"></i> حول اللعبة</h1>
+    </div>
+    
+    <div class="about-content">
+        <div class="about-section">
+            <h2><i class="fas fa-gamepad"></i> وصف اللعبة</h2>
+            <p style="color: white;">Flappy Bird هي لعبة أركيد كلاسيكية حيث تتحكم في طائر يحاول الطيران بين أنابيب خضراء دون الاصطدام بها. اللعبة تختبر مهاراتك في التوقيت ورد الفعل مع زيادة الصعوبة كلما تقدمت في اللعب.</p>
+            <p style="color: white;">تم تطوير هذه النسخة من اللعبة باستخدام تقنيات الويب الحديثة لتكون متاحة للجميع على مختلف الأجهزة.</p>
+        </div>
+        
+        <div class="about-section">
+            <h2><i class="fas fa-bullseye"></i> هدف اللعبة</h2>
+            <p style="color: white;">هدفك الرئيسي هو تحقيق أعلى نقاط ممكنة عن طريق المرور بنجاح بين الأنابيب. كلما مررت بعدد أكبر من الأنابيب، ارتفع مجموع نقاطك.</p>
+            <p style="color: white;">بالإضافة إلى ذلك، يمكنك جمع العملات الذهبية التي تظهر بشكل عشوائي أثناء اللعب. هذه العملات تمكنك من فتح شخصيات طيور جديدة في المتجر.</p>
+        </div>
+        
+        <div class="about-section">
+            <h2><i class="fas fa-question-circle"></i> كيف تلعب</h2>
+            <p style="color: white;"><strong>التحكم في الطائر:</strong></p>
+            <p style="color: white;">- انقر بأي مكان على الشاشة أو اضغط على زر المسافة في لوحة المفاتيح لجعل الطائر يقفز</p>
+            <p style="color: white;">- كل نقرة أو ضغطة تعطي الطائر دفعة صغيرة للأعلى</p>
+            
+            <p style="color: white;"><strong>تجنب العقبات:</strong></p>
+            <p style="color: white;">- تجنب الاصطدام بالأنابيب الخضراء المتحركة</p>
+            <p style="color: white;">- احذر من الاصطدام بالأرض أو السقوط من أعلى الشاشة</p>
+            
+            <p style="color: white;"><strong>جمع النقاط والعملات:</strong></p>
+            <p style="color: white;">- تحصل على نقطة واحدة لكل أنبوب تمر منه بنجاح</p>
+            <p style="color: white;">- اجمع العملات الذهبية لفتح شخصيات جديدة في المتجر</p>
+        </div>
+        
+        <div class="about-section">
+            <h2><i class="fas fa-code"></i> المطور</h2>
+            <p style="color: white;">تم تطوير هذه اللعبة بواسطة <strong>Joker</strong>، مطور واجهات مستخدم وألعاب المتصفح.</p>
+            <p style="color: white;">هذه النسخة من اللعبة تم تطويرها باستخدام HTML5 وCSS3 وJavaScript، مع دعم كامل للغتين العربية والإنجليزية.</p>
+        </div>
+        
+        <div class="about-section">
+            <h2><i class="fas fa-star"></i> مميزات اللعبة</h2>
+            <p style="color: white;">- واجهة مستخدم سهلة وبسيطة</p>
+            <p style="color: white;">- نظام متجر لشراء شخصيات جديدة</p>
+            <p style="color: white;">- حفظ التقدم تلقائياً</p>
+            <p style="color: white;">- دعم كامل للهواتف وأجهزة الكمبيوتر</p>
+            <p style="color: white;">- تصميم متجاوب يعمل على جميع أحجام الشاشات</p>
+        </div>
+    </div>
+    
+    <div class="about-footer">
+        <div class="version" style="color: white;">الإصدار 2.0</div>
+        <button class="close-btn" id="close-about">إغلاق <i class="fas fa-times"></i></button>
+    </div>
+</div>
+    </div>
+
+    <script>
+        // Game variables
+        const gameContainer = document.getElementById('game-container');
+        const bird = document.getElementById('bird');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over');
+        const storeScreen = document.getElementById('store-screen');
+        const aboutScreen = document.getElementById('about-screen');
+        const startButton = document.getElementById('start-button');
+        const storeButton = document.getElementById('store-button');
+        const aboutButton = document.getElementById('about-button');
+        const restartButton = document.getElementById('restart-button');
+        const menuButton = document.getElementById('menu-button');
+        const closeStoreButton = document.querySelector('.close-store');
+        const closeAboutButton = document.getElementById('close-about');
+        const coinsValueDisplay = document.getElementById('coins-value');
+        const storeCoinsDisplay = document.getElementById('store-coins');
+        const charactersGrid = document.querySelector('.characters-grid');
+        const overlay = document.getElementById('overlay');
+
+        let gameWidth, gameHeight;
+        let birdX = 50;
+        let birdY;
+        let birdVelocity = 0;
+        let birdGravity = 0.4;
+        let birdJump = -8;
+        let pipes = [];
+        let coins = [];
+        let pipeWidth = 80;
+        let pipeGap = 180;
+        let pipeInterval = 2000;
+        let coinInterval = 3000;
+        let pipeSpeed = 2;
+        let lastPipeTime = 0;
+        let lastCoinTime = 0;
+        let score = 0;
+        let currentRoundCoins = 0;
+        let totalCoins = 0;
+        let isPlaying = false;
+        let animationId;
+        let lastTimestamp = 0;
+        let frameRate = 60;
+        let frameDuration = 1000 / frameRate;
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // شخصيات الطيور
+        const characters = [
+            {
+                id: 'red',
+                name: 'Red Bird',
+                price: 0,
+                image: 'https://raw.githubusercontent.com/sourabhv/FlapPyBird/master/assets/sprites/redbird-midflap.png',
+                owned: true
+            },
+            {
+                id: 'blue',
+                name: 'Blue Bird',
+                price: 100,
+                image: 'https://raw.githubusercontent.com/sourabhv/FlapPyBird/master/assets/sprites/bluebird-midflap.png',
+                owned: false
+            },
+            {
+                id: 'yellow',
+                name: 'Yellow Bird',
+                price: 150,
+                image: 'https://raw.githubusercontent.com/sourabhv/FlapPyBird/master/assets/sprites/yellowbird-midflap.png',
+                owned: false
+            }
+        ];
+
+        let currentCharacter = characters[0];
+
+        // Initialize game dimensions
+        function initGameDimensions() {
+            gameWidth = gameContainer.offsetWidth;
+            gameHeight = gameContainer.offsetHeight;
+            birdY = gameHeight / 2 - 20;
+            
+            if (isMobile) {
+                birdGravity = 0.5;
+                birdJump = -9;
+                pipeSpeed = 2.5;
+                pipeGap = 160;
+            }
+        }
+
+        // Initialize game
+        function initGame() {
+            initGameDimensions();
+            
+            birdY = gameHeight / 2 - 20;
+            birdVelocity = 0;
+            score = 0;
+            currentRoundCoins = 0;
+            coinsValueDisplay.textContent = currentRoundCoins;
+
+            // Remove existing pipes and coins
+            pipes.forEach(pipe => {
+                if (pipe.topPipe.parentNode) gameContainer.removeChild(pipe.topPipe);
+                if (pipe.bottomPipe.parentNode) gameContainer.removeChild(pipe.bottomPipe);
+            });
+
+            coins.forEach(coin => {
+                if (coin.element.parentNode) gameContainer.removeChild(coin.element);
+            });
+
+            pipes = [];
+            coins = [];
+            lastPipeTime = 0;
+            lastCoinTime = 0;
+            scoreDisplay.textContent = score;
+
+            bird.style.backgroundImage = `url(${currentCharacter.image})`;
+            bird.style.left = birdX + 'px';
+            bird.style.top = birdY + 'px';
+        }
+
+        // Generate new pipe
+        function createPipe() {
+            const minHeight = 60;
+            const maxHeight = gameHeight - pipeGap - minHeight - 80;
+            const topPipeHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
+            const bottomPipeHeight = gameHeight - topPipeHeight - pipeGap - 80;
+
+            const topPipe = document.createElement('div');
+            topPipe.className = 'pipe pipe-top';
+            topPipe.style.height = topPipeHeight + 'px';
+            topPipe.style.left = gameWidth + 'px';
+            gameContainer.appendChild(topPipe);
+
+            const bottomPipe = document.createElement('div');
+            bottomPipe.className = 'pipe pipe-bottom';
+            bottomPipe.style.height = bottomPipeHeight + 'px';
+            bottomPipe.style.left = gameWidth + 'px';
+            bottomPipe.style.bottom = '80px';
+            gameContainer.appendChild(bottomPipe);
+
+            pipes.push({
+                x: gameWidth,
+                topPipe: topPipe,
+                bottomPipe: bottomPipe,
+                counted: false,
+                passed: false
+            });
+        }
+
+        // Generate new coin
+        function createCoin() {
+            const coinY = Math.floor(Math.random() * (gameHeight - 200)) + 60;
+            const coinX = gameWidth + 100;
+
+            const coinElement = document.createElement('div');
+            coinElement.className = 'coin';
+            coinElement.style.left = coinX + 'px';
+            coinElement.style.top = coinY + 'px';
+            gameContainer.appendChild(coinElement);
+
+            coins.push({
+                x: coinX,
+                y: coinY,
+                element: coinElement,
+                collected: false
+            });
+        }
+
+        // Check coin collection
+        function checkCoinCollection() {
+            const birdRect = {
+                left: birdX + 5,
+                right: birdX + 35,
+                top: birdY + 5,
+                bottom: birdY + 35
+            };
+
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                const coinRect = {
+                    left: coin.x,
+                    right: coin.x + 20,
+                    top: coin.y,
+                    bottom: coin.y + 20
+                };
+
+                if (birdRect.right > coinRect.left &&
+                    birdRect.left < coinRect.right &&
+                    birdRect.top < coinRect.bottom &&
+                    birdRect.bottom > coinRect.top &&
+                    !coin.collected) {
+                    coin.collected = true;
+                    gameContainer.removeChild(coin.element);
+                    coins.splice(i, 1);
+                    currentRoundCoins++;
+                    coinsValueDisplay.textContent = currentRoundCoins;
+                }
+            }
+        }
+
+        // Check pipe passing
+        function checkPipePassing() {
+            for (let i = 0; i < pipes.length; i++) {
+                const pipe = pipes[i];
+                const pipeRight = pipe.x + pipeWidth;
+                const birdRight = birdX + 40;
+
+                if (!pipe.passed && birdX > pipe.x && birdRight < pipeRight) {
+                    pipe.currentlyPassing = true;
+                } else if (pipe.currentlyPassing && birdRight > pipeRight) {
+                    pipe.passed = true;
+                    pipe.currentlyPassing = false;
+                }
+            }
+        }
+
+        // Check collisions
+        function checkCollisions() {
+            const birdRect = {
+                left: birdX + 5,
+                right: birdX + 35,
+                top: birdY + 5,
+                bottom: birdY + 35
+            };
+
+            // Ground collision
+            if (birdY + 40 > gameHeight - 80) return true;
+
+            // Ceiling collision
+            if (birdY < 0) {
+                birdY = 0;
+                birdVelocity = 0;
+                return false;
+            }
+
+            // Pipe collisions
+            for (let i = 0; i < pipes.length; i++) {
+                const pipe = pipes[i];
+
+                const topPipeRect = {
+                    left: pipe.x,
+                    right: pipe.x + pipeWidth,
+                    top: 0,
+                    bottom: parseInt(pipe.topPipe.style.height)
+                };
+
+                const bottomPipeRect = {
+                    left: pipe.x,
+                    right: pipe.x + pipeWidth,
+                    top: gameHeight - parseInt(pipe.bottomPipe.style.height) - 80,
+                    bottom: gameHeight - 80
+                };
+
+                if (birdRect.right > topPipeRect.left &&
+                    birdRect.left < topPipeRect.right &&
+                    birdRect.top < topPipeRect.bottom &&
+                    birdRect.bottom > topPipeRect.top) return true;
+
+                if (birdRect.right > bottomPipeRect.left &&
+                    birdRect.left < bottomPipeRect.right &&
+                    birdRect.top < bottomPipeRect.bottom &&
+                    birdRect.bottom > bottomPipeRect.top) return true;
+            }
+
+            return false;
+        }
+
+        // Update score
+        function updateScore() {
+            for (let i = 0; i < pipes.length; i++) {
+                const pipe = pipes[i];
+                if (!pipe.counted && pipe.passed) {
+                    score++;
+                    scoreDisplay.textContent = score;
+                    pipe.counted = true;
+                }
+            }
+        }
+
+        // Game loop
+        function gameLoop(timestamp) {
+            if (!isPlaying) return;
+
+            const elapsed = timestamp - lastTimestamp;
+            if (elapsed < frameDuration) {
+                animationId = requestAnimationFrame(gameLoop);
+                return;
+            }
+            lastTimestamp = timestamp - (elapsed % frameDuration);
+
+            // Generate pipes and coins
+            if (timestamp - lastPipeTime > pipeInterval) {
+                createPipe();
+                lastPipeTime = timestamp;
+            }
+
+            if (timestamp - lastCoinTime > coinInterval) {
+                createCoin();
+                lastCoinTime = timestamp;
+            }
+
+            // Update bird
+            birdVelocity += birdGravity;
+            birdY += birdVelocity;
+            bird.style.top = birdY + 'px';
+
+            // Update pipes
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                const pipe = pipes[i];
+                pipe.x -= pipeSpeed;
+                pipe.topPipe.style.left = pipe.x + 'px';
+                pipe.bottomPipe.style.left = pipe.x + 'px';
+
+                if (pipe.x + pipeWidth < -100) {
+                    if (pipe.topPipe.parentNode) gameContainer.removeChild(pipe.topPipe);
+                    if (pipe.bottomPipe.parentNode) gameContainer.removeChild(pipe.bottomPipe);
+                    pipes.splice(i, 1);
+                }
+            }
+
+            // Update coins
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                coin.x -= pipeSpeed;
+                coin.element.style.left = coin.x + 'px';
+
+                if (coin.x + 20 < -50) {
+                    gameContainer.removeChild(coin.element);
+                    coins.splice(i, 1);
+                }
+            }
+
+            checkCoinCollection();
+            checkPipePassing();
+            updateScore();
+
+            if (checkCollisions()) {
+                gameOver();
+                return;
+            }
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Handle jump
+        function jump(e) {
+            if (!isPlaying) return;
+            if (e) e.preventDefault();
+            birdVelocity = birdJump;
+        }
+
+        // Game over
+        function gameOver() {
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            finalScoreDisplay.textContent = `النقاط: ${score}`;
+            gameOverScreen.style.display = 'flex';
+            
+            totalCoins += currentRoundCoins;
+            localStorage.setItem('flappyBirdCoins', totalCoins);
+            storeCoinsDisplay.textContent = totalCoins;
+        }
+
+        // Start game
+        function startGame() {
+            initGame();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            storeScreen.style.display = 'none';
+            aboutScreen.style.display = 'none';
+            overlay.style.display = 'none';
+            isPlaying = true;
+            lastTimestamp = performance.now();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Return to menu
+        function returnToMenu() {
+            isPlaying = false;
+            cancelAnimationFrame(animationId);
+            gameOverScreen.style.display = 'none';
+            storeScreen.style.display = 'none';
+            aboutScreen.style.display = 'none';
+            overlay.style.display = 'none';
+            startScreen.style.display = 'flex';
+        }
+
+        // Show store
+        function showStore() {
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            aboutScreen.style.display = 'none';
+            overlay.style.display = 'none';
+            storeScreen.style.display = 'flex';
+            storeCoinsDisplay.textContent = totalCoins;
+            renderStoreItems();
+        }
+
+        // Show about
+        function showAbout() {
+            aboutScreen.style.display = 'block';
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close about
+        function closeAbout() {
+            aboutScreen.style.display = 'none';
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Render store items
+        function renderStoreItems() {
+            charactersGrid.innerHTML = '';
+            
+            characters.forEach(character => {
+                const characterCard = document.createElement('div');
+                characterCard.className = 'character-card';
+                
+                characterCard.innerHTML = `
+                    <div class="character-image" style="background-image: url('${character.image}')"></div>
+                    <div class="character-name">${character.name}</div>
+                    <div class="character-price">${character.price} عملات</div>
+                    ${character.owned 
+                        ? `<button class="select-button" data-id="${character.id}">
+                            ${character.id === currentCharacter.id ? 'محدد' : 'اختيار'}
+                           </button>` 
+                        : `<button class="buy-button" data-id="${character.id}" ${totalCoins < character.price ? 'disabled' : ''}>
+                            ${totalCoins >= character.price ? 'شراء' : 'تحتاج عملات أكثر'}
+                          </button>`}
+                `;
+                
+                charactersGrid.appendChild(characterCard);
+            });
+            
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const characterId = this.getAttribute('data-id');
+                    buyCharacter(characterId);
+                });
+            });
+            
+            document.querySelectorAll('.select-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const characterId = this.getAttribute('data-id');
+                    selectCharacter(characterId);
+                });
+            });
+        }
+
+        // Buy character
+        function buyCharacter(characterId) {
+            const character = characters.find(c => c.id === characterId);
+            
+            if (character && !character.owned && totalCoins >= character.price) {
+                totalCoins -= character.price;
+                character.owned = true;
+                
+                localStorage.setItem('flappyBirdCoins', totalCoins);
+                localStorage.setItem(`flappyBirdCharacter_${characterId}`, 'owned');
+                
+                storeCoinsDisplay.textContent = totalCoins;
+                selectCharacter(characterId);
+            }
+        }
+
+        // Select character
+        function selectCharacter(characterId) {
+            const character = characters.find(c => c.id === characterId);
+            if (character && character.owned) {
+                currentCharacter = character;
+                localStorage.setItem('flappyBirdSelectedCharacter', characterId);
+                renderStoreItems();
+                
+                if (!isPlaying) {
+                    bird.style.backgroundImage = `url(${character.image})`;
+                }
+            }
+        }
+
+        // Load saved data
+        function loadSavedData() {
+            const savedCoins = localStorage.getItem('flappyBirdCoins');
+            if (savedCoins) {
+                totalCoins = parseInt(savedCoins);
+            }
+            
+            characters.forEach(character => {
+                if (character.id !== 'red') {
+                    const isOwned = localStorage.getItem(`flappyBirdCharacter_${character.id}`);
+                    if (isOwned) {
+                        character.owned = true;
+                    }
+                }
+            });
+            
+            const selectedCharacterId = localStorage.getItem('flappyBirdSelectedCharacter');
+            if (selectedCharacterId) {
+                const character = characters.find(c => c.id === selectedCharacterId);
+                if (character && character.owned) {
+                    currentCharacter = character
+                    bird.style.backgroundImage = `url(${character.image})`;
+                }
+            }
+            
+            storeCoinsDisplay.textContent = totalCoins;
+            coinsValueDisplay.textContent = totalCoins;
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        menuButton.addEventListener('click', returnToMenu);
+        storeButton.addEventListener('click', showStore);
+        aboutButton.addEventListener('click', showAbout);
+        closeStoreButton.addEventListener('click', returnToMenu);
+        closeAboutButton.addEventListener('click', closeAbout);
+
+        // Jump controls
+        if (isMobile) {
+            gameContainer.addEventListener('touchstart', jump);
+        } else {
+            gameContainer.addEventListener('click', jump);
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') jump(e);
+            });
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (!isPlaying) {
+                initGameDimensions();
+                bird.style.top = birdY + 'px';
+            }
+        });
+
+        // Initialize
+        loadSavedData();
+        initGameDimensions();
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBdiE5KVxxVFxYGsVVWdsIXofurM9fM1Eo",
+    authDomain: "flappy-bird-1b6e5.firebaseapp.com",
+    databaseURL: "https://flappy-bird-1b6e5-default-rtdb.firebaseio.com",
+    projectId: "flappy-bird-1b6e5",
+    storageBucket: "flappy-bird-1b6e5.firebasestorage.app",
+    messagingSenderId: "317915318450",
+    appId: "1:317915318450:web:293c5da34b430c2dbaa1ab"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Update player count
+function updatePlayerCount() {
+    const countRef = database.ref('playerCount');
+    
+    // Check if this is the first visit
+    if (!localStorage.getItem('visited')) {
+        countRef.transaction((currentCount) => {
+            return (currentCount || 0) + 1;
+        });
+        localStorage.setItem('visited', 'true');
+    }
+    
+    // Listen for count changes
+    countRef.on('value', (snapshot) => {
+        const count = snapshot.val() || 0;
+        document.getElementById('total-players').textContent = count.toLocaleString();
+    });
+}
+
+// Call this function when the game starts
+updatePlayerCount();
+    </script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</body>
+</html>
